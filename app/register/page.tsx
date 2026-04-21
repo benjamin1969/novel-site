@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function RegisterPage() {
+  // 无邮箱注册功能 - 为5-6年级小学生设计
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
