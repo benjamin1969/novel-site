@@ -8,8 +8,9 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'  # 升级到Node.js 20，兼容性更好
   NEXT_PUBLIC_API_URL: 'https://novel-platform-api.sunlongyun1030.workers.dev'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'  # 强制使用Node.js 24
 
 jobs:
   build-and-deploy:
@@ -17,8 +18,6 @@ jobs:
     permissions:
       contents: read
       deployments: write
-      pages: write
-      id-token: write
     
     steps:
       - name: Checkout repository
@@ -46,16 +45,13 @@ jobs:
       - name: Verify build output
         run: |
           echo "✅ 构建完成，检查输出目录..."
-          ls -la .next/standalone/ || echo "⚠️  .next/standalone 目录不存在"
-          ls -la .next/standalone/.next/ || echo "⚠️  .next/.next 目录不存在"
-      
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .  # 上传整个项目，Cloudflare Pages会处理构建输出
+          if [ -d ".next/standalone" ]; then
+            echo "📁 找到standalone目录"
+            ls -la .next/standalone/
+          else
+            echo "📁 使用默认构建输出"
+            ls -la .next/
+          fi
       
       - name: Deploy to Cloudflare Pages
         id: deployment
@@ -64,7 +60,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: novel-platform
-          directory: .  # 上传整个项目
+          directory: .next/standalone  # 使用Next.js standalone输出
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
           workingDirectory: '.'
