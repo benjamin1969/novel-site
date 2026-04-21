@@ -79,6 +79,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     
     steps:
+      - name: Wait for deployment propagation
+        run: |
+          echo "⏳ 等待部署传播到CDN边缘节点..."
+          echo "Cloudflare Pages部署后需要30-60秒才能在全球生效"
+          sleep 45
+          echo "✅ 等待完成，开始测试..."
+      
       - name: Test Cloudflare Worker API
         run: |
           echo "🔍 测试Cloudflare Worker API连接..."
@@ -94,15 +101,26 @@ jobs:
       - name: Test website deployment
         run: |
           echo "🔍 测试网站部署..."
-          # 等待几秒让部署生效
-          sleep 10
           
-          # 测试主网站
-          MAIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://novel-platform-f3a.pages.dev/")
-          echo "主网站状态码: $MAIN_STATUS"
+          # 测试主网站，最多重试3次
+          MAX_RETRIES=3
+          RETRY_COUNT=0
           
-          if [ "$MAIN_STATUS" = "200" ]; then
-            echo "✅ 网站部署正常"
-          else
-            echo "⚠️  网站部署异常，状态码: $MAIN_STATUS"
-          fi
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            MAIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://novel-platform-f3a.pages.dev/")
+            echo "测试 $((RETRY_COUNT+1))/$MAX_RETRIES: 状态码: $MAIN_STATUS"
+            
+            if [ "$MAIN_STATUS" = "200" ]; then
+              echo "✅ 网站部署正常"
+              exit 0
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "⏳ 等待10秒后重试..."
+              sleep 10
+            fi
+          done
+          
+          echo "⚠️  网站部署异常，最终状态码: $MAIN_STATUS"
+          echo "💡 提示: 这可能是因为CDN缓存延迟，网站可能稍后自动恢复"
