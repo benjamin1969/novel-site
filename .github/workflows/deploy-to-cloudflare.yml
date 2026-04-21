@@ -45,12 +45,23 @@ jobs:
       - name: Verify build output
         run: |
           echo "✅ 构建完成，检查输出目录..."
-          if [ -d "out" ]; then
-            echo "📁 找到静态导出目录(out)"
-            ls -la out/
-          else
-            echo "❌ 未找到out目录，检查构建配置"
+          if [ -d ".next" ]; then
+            echo "📁 找到.next构建目录"
             ls -la .next/
+            
+            # 检查是否有standalone目录
+            if [ -d ".next/standalone" ]; then
+              echo "📁 找到standalone目录，使用standalone模式"
+              echo "DEPLOY_DIR=.next/standalone" >> $GITHUB_ENV
+            else
+              echo "📁 使用标准.next目录"
+              echo "DEPLOY_DIR=.next" >> $GITHUB_ENV
+            fi
+            
+            echo "部署目录: $DEPLOY_DIR"
+          else
+            echo "❌ 未找到.next目录，检查构建配置"
+            exit 1
           fi
       
       - name: Deploy to Cloudflare Pages
@@ -60,7 +71,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: novel-platform
-          directory: out  # 使用Next.js静态导出输出
+          directory: ${{ env.DEPLOY_DIR || '.next' }}  # 使用动态部署目录
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
           workingDirectory: '.'
