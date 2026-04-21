@@ -1,29 +1,53 @@
-// 生产环境配置 - 专门用于 Cloudflare Pages
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  // Cloudflare Pages 需要 standalone 输出
+  // 启用静态导出，适用于Cloudflare Pages
   output: 'standalone',
-  // 图片配置
+  
+  // 启用严格模式
+  reactStrictMode: true,
+  
+  // 配置图片优化
   images: {
-    unoptimized: true,
+    unoptimized: true, // Cloudflare Pages不支持Next.js图片优化
   },
-  // 禁用 trailingSlash 重定向
-  trailingSlash: false,
-  // 基础路径
-  basePath: '',
-  // 确保 API 路由在构建时被处理
-  skipTrailingSlashRedirect: true,
-  // 优化构建输出
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+  
+  // 配置环境变量
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://novel-platform-api.sunlongyun1030.workers.dev',
   },
-  // 实验性功能
-  experimental: {
-    // 启用服务器组件
-    serverComponentsExternalPackages: [],
+  
+  // 配置headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
   },
-}
+  
+  // 重写规则，用于API代理
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://novel-platform-api.sunlongyun1030.workers.dev/api/:path*',
+      },
+    ];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
