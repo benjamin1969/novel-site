@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>直接测试页面</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .section { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        #console { background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 5px; font-family: monospace; height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>直接测试页面</h1>
+    
+    <div class="section">
+        <h2>1. 登录状态</h2>
+        <button onclick="setZhangSanLogin()">设置张三登录</button>
+        <button onclick="checkLogin()">检查登录状态</button>
+        <button onclick="clearAll()">清除所有数据</button>
+        <div id="login-status"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 测试小说创建</h2>
+        <button onclick="testCreateNovel()">创建测试小说</button>
+        <button onclick="testGetNovels()">查看所有小说</button>
+        <button onclick="testMyNovels()">查看我的作品</button>
+    </div>
+    
+    <div class="section">
+        <h2>3. 控制台输出</h2>
+        <div id="console"></div>
+    </div>
+    
+    <script>
+        const consoleDiv = document.getElementById(console);
+        
+        function log(message, type = info) {
+            const time = new Date().toLocaleTimeString();
+            const color = type === error ? #ef4444 : type === success ? #10b981 : #f3f4f6;
+            consoleDiv.innerHTML += `<div style="color:${color}">[${time}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // 1. 检查localStorage
+        function checkLogin() {
+            log(=== 检查localStorage ===);
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                log(`${key}: ${value}`);
+            }
+            
+            // 检查用户名提取
+            const username = testUsernameExtraction();
+            if (username) {
+                log(`✅ 找到用户名: ${username}`, success);
+                document.getElementById(login-status).innerHTML = `<div class="success">已登录: ${username}</div>`;
+            } else {
+                log(❌ 未找到用户名, error);
+                document.getElementById(login-status).innerHTML = `<div class="error">未登录</div>`;
+            }
+        }
+        
+        // 2. 设置张三登录
+        function setZhangSanLogin() {
+            localStorage.setItem(novel-site-username, 张三);
+            localStorage.setItem(novel-site-loggedin, true);
+            localStorage.setItem(user, JSON.stringify({
+                id: user_test_ + Date.now(),
+                username: 张三,
+                role: USER,
+                createdAt: new Date().toISOString()
+            }));
+            log(✅ 已设置张三登录, success);
+            checkLogin();
+        }
+        
+        // 3. 用户名提取逻辑（与小说创建页面相同）
+        function testUsernameExtraction() {
+            const possibleKeys = [novel-site-username, username, currentUser, user, name];
+            let currentUsername = ;
+            
+            for (const key of possibleKeys) {
+                const value = localStorage.getItem(key);
+                if (value && value.trim() && value.trim() !== 匿名用户) {
+                    if (key === user) {
+                        try {
+                            const userData = JSON.parse(value.trim());
+                            currentUsername = userData.username || userData.name || userData.displayName || ;
+                            log(`从JSON提取用户名: ${currentUsername} (键: ${key})`);
+                        } catch (e) {
+                            currentUsername = value.trim();
+                            log(`直接使用用户名: ${currentUsername} (键: ${key})`);
+                        }
+                    } else {
+                        currentUsername = value.trim();
+                        log(`找到用户名: ${currentUsername} (键: ${key})`);
+                    }
+                    break;
+                }
+            }
+            
+            return currentUsername;
+        }
+        
+        // 4. 测试创建小说
+        async function testCreateNovel() {
+            const username = testUsernameExtraction();
+            if (!username) {
+                log(❌ 请先设置登录, error);
+                return;
+            }
+            
+            const novelData = {
+                title: 直接测试小说- + Date.now(),
+                description: 这是直接测试小说,
+                author: username,
+                content: 这是直接测试内容...
+            };
+            
+            log(`发送数据: 标题="${novelData.title}", 作者="${novelData.author}"`);
+            
+            try {
+                const response = await fetch(/api/novels, {
+                    method: POST,
+                    headers: {Content-Type: application/json},
+                    body: JSON.stringify(novelData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ 小说创建成功！作者: ${result.novel?.author}`, success);
+                    log(`小说ID: ${result.novel?.id}`);
+                } else {
+                    log(`❌ 创建失败: ${result.error}`, error);
+                }
+            } catch (error) {
+                log(`❌ 请求失败: ${error}`, error);
+            }
+        }
+        
+        // 5. 测试获取所有小说
+        async function testGetNovels() {
+            try {
+                const response = await fetch(/api/novels);
+                const novels = await response.json();
+                log(`=== 当前所有小说 (共${novels.length}本) ===`);
+                novels.forEach(novel => {
+                    log(`《${novel.title}》 - 作者: ${novel.author} - ID: ${novel.id}`);
+                });
+            } catch (error) {
+                log(`❌ 获取失败: ${error}`, error);
+            }
+        }
+        
+        // 6. 测试我的作品
+        async function testMyNovels() {
+            const username = testUsernameExtraction();
+            if (!username) {
+                log(❌ 请先设置登录, error);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/my-novels?author=${encodeURIComponent(username)}`);
+                const novels = await response.json();
+                log(`=== 我的作品 (${username}) ===`);
+                if (novels.length === 0) {
+                    log(暂无作品);
+                } else {
+                    novels.forEach(novel => {
+                        log(`《${novel.title}》 - 作者: ${novel.author}`);
+                    });
+                }
+            } catch (error) {
+                log(`❌ 获取失败: ${error}`, error);
+            }
+        }
+        
+        // 7. 清除所有数据
+        function clearAll() {
+            if (confirm(确定要清除所有数据吗？)) {
+                localStorage.clear();
+                log(✅ 已清除所有数据, success);
+                checkLogin();
+            }
+        }
+        
+        // 页面加载时自动检查
+        window.onload = checkLogin;
+    </script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+// 小说阅读页面 - 简约朴素左右布局（无图标版）
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
+
+export default function NovelDetailPage() {
+  const [selectedChapter, setSelectedChapter] = useState(0)
+  const [novel, setNovel] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState('')
+  const params = useParams()
+  
+  // 格式化日期的辅助函数
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '未知日期'
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+    } catch (e) {
+      // 尝试从ISO格式中提取日期部分
+      const dateMatch = dateString.match(/^(\d{4}-\d{2}-\d{2})/)
+      return dateMatch ? dateMatch[1] : '未知日期'
+    }
+  }
+  
+  // 获取当前登录用户
+  useEffect(() => {
+    const getCurrentUser = () => {
+      // 尝试所有可能的键名来获取用户名
+      const possibleKeys = [
+        'novel-site-username',
+        'username',
+        'currentUser',
+        'user',
+        'name'
+      ]
+      
+      for (const key of possibleKeys) {
+        const value = localStorage.getItem(key)
+        if (value && value.trim() && value.trim() !== '匿名用户') {
+          // 特殊处理：如果键名是'user'，可能是JSON格式
+          if (key === 'user') {
+            try {
+              const userData = JSON.parse(value.trim())
+              // 尝试从JSON对象中提取用户名
+              return userData.username || userData.name || userData.displayName || ''
+            } catch (e) {
+              return value.trim()
+            }
+          } else {
+            return value.trim()
+          }
+        }
+      }
+      return ''
+    }
+    
+    const user = getCurrentUser()
+    setCurrentUser(user)
+  }, [])
+
+  useEffect(() => {
+    const fetchNovel = async () => {
+      try {
+        setLoading(true)
+        const novelId = params.id as string
+        
+        // 尝试从API获取小说基本信息
+        const novelResponse = await fetch(`/api/novels/${novelId}`)
+        
+        if (novelResponse.ok) {
+          const novelData = await novelResponse.json()
+          
+          // 获取章节数据
+          const chaptersResponse = await fetch(`/api/novels/${novelId}/chapters`)
+          let chapterList = []
+          
+          if (chaptersResponse.ok) {
+            const chaptersData = await chaptersResponse.json()
+            chapterList = chaptersData.map((chapter: any, index: number) => ({
+              id: chapter.id,
+              title: chapter.title || `第${index + 1}章`,
+              number: chapter.number || index + 1,
+              content: chapter.content || '',
+              createdAt: chapter.createdAt || new Date().toISOString().split('T')[0],
+              views: chapter.views || 0
+            }))
+          }
+          
+          setNovel({
+            ...novelData,
+            chapters: chapterList.length,
+            chapterList: chapterList
+          })
+          setLoading(false)
+        } else {
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error(err)
+        setLoading(false)
+      }
+    }
+
+    fetchNovel()
+  }, [params.id])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-16">
+            <div className="text-gray-400 mb-4">加载中...</div>
+            <p className="text-gray-600">正在获取小说内容</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!novel) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-16">
+            <div className="text-gray-400 mb-4">小说不存在</div>
+            <p className="text-gray-600 mb-6">找不到您要阅读的小说</p>
+            <Link href="/novels" className="text-blue-600 hover:text-blue-800">
+              返回作品库
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const isAuthor = currentUser === novel.author
+  const currentChapter = novel.chapterList?.[selectedChapter]
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* 返回链接 */}
+        <div className="mb-6">
+          <Link href="/novels" className="text-gray-600 hover:text-gray-900">
+            ← 返回作品库
+          </Link>
+        </div>
+
+        {/* 小说基本信息 */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div className="flex-1">
+              <div className="mb-2">
+                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">
+                  {novel.category || '小说'}
+                </span>
+              </div>
+              
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">{novel.title}</h1>
+              
+              <div className="flex flex-wrap items-center text-gray-600 mb-6 gap-4">
+                <div className="flex items-center">
+                  <span className="font-medium">作者：{novel.author}</span>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <span>{novel.chapters} 章</span>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <span>{novel.status === 'published' ? '已发布' : '草稿'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-5 mb-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">作品简介</h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{novel.description}</p>
+              </div>
+            </div>
+            
+            {/* 作者操作按钮 */}
+            {isAuthor && (
+              <div className="lg:w-64 flex flex-col gap-3">
+                <Link 
+                  href={`/novels/edit/${novel.id}`}
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-center font-medium"
+                >
+                  编辑小说信息
+                </Link>
+                <Link 
+                  href={`/novels/new?mode=chapter&novel=${novel.id}`}
+                  className="px-5 py-2.5 bg-green-600 text-white rounded hover:bg-green-700 transition text-center font-medium"
+                >
+                  添加新章节
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 左右分栏布局 */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 左侧：章节列表 */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b border-gray-200">
+                章节列表 ({novel.chapters})
+              </h2>
+              
+              {novel.chapterList && novel.chapterList.length > 0 ? (
+                <div className="space-y-2">
+                  {novel.chapterList.map((chapter: any, index: number) => (
+                    <button
+                      key={chapter.id}
+                      onClick={() => setSelectedChapter(index)}
+                      className={`w-full text-left p-3 rounded transition ${
+                        selectedChapter === index
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'hover:bg-gray-50 text-gray-700 border border-transparent'
+                      }`}
+                    >
+                      <div className="font-medium mb-1">
+                        {chapter.title}
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>第{chapter.number}章</span>
+                        <span>{formatDate(chapter.createdAt)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-3">暂无章节</div>
+                  <p className="text-gray-600 text-sm mb-4">
+                    这部小说还没有任何章节内容。
+                  </p>
+                  {isAuthor && (
+                    <Link 
+                      href={`/novels/new?mode=chapter&novel=${novel.id}`}
+                      className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
+                    >
+                      添加第一个章节
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 右侧：章节内容 */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+              {currentChapter ? (
+                <>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                      {currentChapter.title}
+                    </h2>
+                    <div className="flex items-center text-gray-600 text-sm mb-4">
+                      <span className="mr-4">第{currentChapter.number}章</span>
+                      <span className="mr-4">发布于 {formatDate(currentChapter.createdAt)}</span>
+                      <span>阅读量：{currentChapter.views}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="prose max-w-none">
+                    <div className="text-gray-800 leading-relaxed whitespace-pre-line text-lg">
+                      {currentChapter.content || '本章节暂无内容'}
+                    </div>
+                  </div>
+                  
+                  {/* 章节导航 */}
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <div className="flex justify-between">
+                      <button
+                        onClick={() => setSelectedChapter(Math.max(0, selectedChapter - 1))}
+                        disabled={selectedChapter === 0}
+                        className={`px-4 py-2 rounded transition ${
+                          selectedChapter === 0
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        上一章
+                      </button>
+                      <button
+                        onClick={() => setSelectedChapter(Math.min(novel.chapterList.length - 1, selectedChapter + 1))}
+                        disabled={selectedChapter === novel.chapterList.length - 1}
+                        className={`px-4 py-2 rounded transition ${
+                          selectedChapter === novel.chapterList.length - 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        下一章
+                      </button>
+                    </div>
+                    
+                    <div className="mt-4 text-center text-gray-600 text-sm">
+                      {selectedChapter + 1} / {novel.chapterList.length}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">暂无章节内容</div>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    这部小说还没有任何章节内容。
+                    {isAuthor ? '作为作者，您可以点击左侧的"添加第一个章节"按钮开始创作。' : '请等待作者添加章节内容。'}
+                  </p>
+                  {isAuthor && (
+                    <Link 
+                      href={`/novels/new?mode=chapter&novel=${novel.id}`}
+                      className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition inline-block"
+                    >
+                      开始创作第一个章节
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* 阅读提示 */}
+            <div className="mt-4 text-center text-gray-500 text-sm">
+              点击左侧章节列表中的章节可以切换阅读内容
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

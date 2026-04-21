@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>紧急修复 - 清除浏览器缓存</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .steps { background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>⚠️ 紧急修复：清除浏览器缓存</h1>
+    
+    <div class="warning">
+        <h2>问题诊断</h2>
+        <p>检测到您正在使用<strong>旧版本的代码</strong>，导致：</p>
+        <ul>
+            <li>发布小说的作者显示为"<strong>匿名用户</strong>"</li>
+            <li>"我的作品"页面看不到自己写的小说</li>
+            <li>数据混乱，书名和内容不匹配</li>
+        </ul>
+    </div>
+    
+    <div class="steps">
+        <h2>立即修复步骤：</h2>
+        <ol>
+            <li><strong>按 Ctrl+F5</strong> (Windows) 或 <strong>Cmd+Shift+R</strong> (Mac) - 强制刷新页面</li>
+            <li>如果问题依旧，<strong>清除浏览器缓存</strong>：
+                <ul>
+                    <li>按 F12 打开开发者工具</li>
+                    <li>点击"Application"标签</li>
+                    <li>点击"Clear storage"</li>
+                    <li>勾选所有选项，点击"Clear site data"</li>
+                </ul>
+            </li>
+            <li>关闭浏览器重新打开</li>
+            <li>重新登录测试</li>
+        </ol>
+    </div>
+    
+    <div>
+        <h2>快速测试：</h2>
+        <button onclick="testLogin()">测试登录状态</button>
+        <button onclick="clearCache()">清除缓存</button>
+        <button onclick="goToTest()">去测试页面</button>
+        <button onclick="createNovel()">创建测试小说</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border-radius: 5px;"></div>
+    
+    <script>
+        function testLogin() {
+            const username = localStorage.getItem(novel-site-username) || 未找到;
+            const loggedin = localStorage.getItem(novel-site-loggedin) || false;
+            document.getElementById(result).innerHTML = `
+                <div style="background:#d4edda;padding:10px;">
+                    <strong>登录状态：</strong><br>
+                    用户名: ${username}<br>
+                    登录状态: ${loggedin}<br>
+                    localStorage键名: ${JSON.stringify(Object.keys(localStorage))}
+                </div>
+            `;
+        }
+        
+        function clearCache() {
+            if (confirm(确定要清除所有网站数据吗？这将清除登录状态。)) {
+                localStorage.clear();
+                document.getElementById(result).innerHTML = `
+                    <div style="background:#d4edda;padding:10px;">
+                        已清除所有缓存数据，请重新登录。
+                    </div>
+                `;
+            }
+        }
+        
+        function goToTest() {
+            window.location.href = /test-login;
+        }
+        
+        function createNovel() {
+            const username = localStorage.getItem(novel-site-username);
+            if (!username) {
+                alert(请先登录！);
+                return;
+            }
+            
+            // 创建测试小说
+            fetch(/api/novels, {
+                method: POST,
+                headers: {Content-Type: application/json},
+                body: JSON.stringify({
+                    title: 测试小说- + Date.now(),
+                    description: 这是一个测试小说,
+                    author: username,
+                    content: 这是测试内容...
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById(result).innerHTML = `
+                    <div style="background:#d4edda;padding:10px;">
+                        <strong>小说创建成功！</strong><br>
+                        标题: ${data.novel?.title || 未知}<br>
+                        作者: ${data.novel?.author || 未知}<br>
+                        ID: ${data.novel?.id || 未知}
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.getElementById(result).innerHTML = `
+                    <div style="background:#f8d7da;padding:10px;">
+                        <strong>创建失败：</strong>${error}
+                    </div>
+                `;
+            });
+        }
+        
+        // 页面加载时自动测试
+        window.onload = testLogin;
+    </script>
+</body>
+</html>

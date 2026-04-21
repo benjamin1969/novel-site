@@ -1,0 +1,511 @@
+     1|// 小说创作页面 - 支持章节系统
+     2|'use client'
+     3|
+     4|import { useState, useEffect } from 'react'
+     5|
+     6|export default function NewNovelChapterPage() {
+     7|  const [mode, setMode] = useState<'new' | 'chapter'>('new') // 'new'=新小说, 'chapter'=添加章节
+     8|  const [existingNovels, setExistingNovels] = useState<any[]>([])
+     9|  const [selectedNovelId, setSelectedNovelId] = useState<string>('')
+    10|  const [isLoading, setIsLoading] = useState(false)
+    11|
+    12|  // 小说表单数据
+    13|  const [novelData, setNovelData] = useState({
+    14|    title: '',
+    15|    description: '',
+    16|    category: '奇幻',
+    17|    tags: '',
+    18|    isPublic: true,
+    19|    allowComments: true
+    20|  })
+    21|
+    22|  // 章节表单数据
+    23|  const [chapterData, setChapterData] = useState({
+    24|    chapterTitle: '',
+    25|    chapterNumber: 1,
+    26|    content: '',
+    27|    summary: ''
+    28|  })
+    29|
+    30|  // 模拟加载用户已有小说
+    31|  useEffect(() => {
+    32|    // 模拟API调用延迟
+    33|    setTimeout(() => {
+    34|      setExistingNovels([
+    35|        { id: '1', title: '魔法森林的冒险', chapters: 3, lastUpdated: '2024-03-10' },
+    36|        { id: '2', title: '太空探险记', chapters: 2, lastUpdated: '2024-03-11' },
+    37|        { id: '3', title: '海底两万里', chapters: 1, lastUpdated: '2024-03-12' }
+    38|      ])
+    39|    }, 500)
+    40|  }, [])
+    41|
+    42|  // 当选择已有小说时，自动设置章节号
+    43|  useEffect(() => {
+    44|    if (selectedNovelId && mode === 'chapter') {
+    45|      const selectedNovel = existingNovels.find(n => n.id === selectedNovelId)
+    46|      if (selectedNovel) {
+    47|        setChapterData(prev => ({
+    48|          ...prev,
+    49|          chapterNumber: selectedNovel.chapters + 1
+    50|        }))
+    51|      }
+    52|    }
+    53|  }, [selectedNovelId, mode, existingNovels])
+    54|
+    55|  // 处理新小说提交
+    56|  const handleNewNovelSubmit = (e: React.FormEvent) => {
+    57|    e.preventDefault()
+    58|    setIsLoading(true)
+    59|    
+    60|    // 模拟API调用
+    61|    setTimeout(() => {
+    62|      setIsLoading(false)
+    63|      alert(`🎉 小说 "${novelData.title}" 创建成功！\n\n现在你可以为这部小说添加章节。`)
+    64|      
+    65|      // 重置表单
+    66|      setNovelData({
+    67|        title: '',
+    68|        description: '',
+    69|        category: '奇幻',
+    70|        tags: '',
+    71|        isPublic: true,
+    72|        allowComments: true
+    73|      })
+    74|      
+    75|      // 切换到添加章节模式
+    76|      setMode('chapter')
+    77|    }, 1500)
+    78|  }
+    79|
+    80|  // 处理新章节提交
+    81|  const handleNewChapterSubmit = (e: React.FormEvent) => {
+    82|    e.preventDefault()
+    83|    
+    84|    if (!selectedNovelId && mode === 'chapter') {
+    85|      alert('请选择要添加章节的小说')
+    86|      return
+    87|    }
+    88|    
+    89|    setIsLoading(true)
+    90|    
+    91|    // 模拟API调用
+    92|    setTimeout(() => {
+    93|      setIsLoading(false)
+    94|      
+    95|      const novelTitle = selectedNovelId 
+    96|        ? existingNovels.find(n => n.id === selectedNovelId)?.title 
+    97|        : '你的小说'
+    98|      
+    99|      alert(`✅ 第 ${chapterData.chapterNumber} 章 "${chapterData.chapterTitle}" 已成功添加到 "${novelTitle}"！`)
+   100|      
+   101|      // 重置章节表单
+   102|      setChapterData({
+   103|        chapterTitle: '',
+   104|        chapterNumber: chapterData.chapterNumber + 1,
+   105|        content: '',
+   106|        summary: ''
+   107|      })
+   108|    }, 1500)
+   109|  }
+   110|
+   111|  // 快速切换到添加章节模式
+   112|  const switchToChapterMode = () => {
+   113|    setMode('chapter')
+   114|    if (existingNovels.length > 0 && !selectedNovelId) {
+   115|      setSelectedNovelId(existingNovels[0].id)
+   116|    }
+   117|  }
+   118|
+   119|  return (
+   120|    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+   121|      {/* 页面标题 */}
+   122|      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+   123|        <div style={{
+   124|          display: 'inline-flex',
+   125|          alignItems: 'center',
+   126|          gap: '0.5rem',
+   127|          padding: '0.5rem 1rem',
+   128|          backgroundColor: '#dbeafe',
+   129|          color: '#1e40af',
+   130|          borderRadius: '9999px',
+   131|          marginBottom: '1rem'
+   132|        }}>
+   133|          <span>📖</span>
+   134|          <span style={{ fontWeight: '500' }}>小说创作</span>
+   135|        </div>
+   136|        
+   137|        <h1 style={{
+   138|          fontSize: '2rem',
+   139|          fontWeight: 'bold',
+   140|          marginBottom: '0.5rem',
+   141|          color: '#111827'
+   142|        }}>
+   143|          {mode === 'new' ? '创作新故事' : '添加新章节'}
+   144|        </h1>
+   145|        
+   146|        <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+   147|          {mode === 'new' 
+   148|            ? '开始创作全新的故事，构建你的想象世界' 
+   149|            : '为已有小说添加新的章节，延续你的故事'}
+   150|        </p>
+   151|
+   152|        {/* 模式切换 */}
+   153|        <div style={{
+   154|          display: 'inline-flex',
+   155|          backgroundColor: '#f3f4f6',
+   156|          borderRadius: '8px',
+   157|          padding: '0.25rem',
+   158|          marginBottom: '1.5rem'
+   159|        }}>
+   160|          <button
+   161|            onClick={() => setMode('new')}
+   162|            style={{
+   163|              padding: '0.5rem 1.5rem',
+   164|              backgroundColor: mode === 'new' ? '#2563eb' : 'transparent',
+   165|              color: mode === 'new' ? 'white' : '#374151',
+   166|              border: 'none',
+   167|              borderRadius: '6px',
+   168|              fontSize: '0.875rem',
+   169|              fontWeight: '500',
+   170|              cursor: 'pointer',
+   171|              transition: 'all 0.2s'
+   172|            }}
+   173|          >
+   174|            创作新小说
+   175|          </button>
+   176|          <button
+   177|            onClick={switchToChapterMode}
+   178|            style={{
+   179|              padding: '0.5rem 1.5rem',
+   180|              backgroundColor: mode === 'chapter' ? '#2563eb' : 'transparent',
+   181|              color: mode === 'chapter' ? 'white' : '#374151',
+   182|              border: 'none',
+   183|              borderRadius: '6px',
+   184|              fontSize: '0.875rem',
+   185|              fontWeight: '500',
+   186|              cursor: 'pointer',
+   187|              transition: 'all 0.2s'
+   188|            }}
+   189|          >
+   190|            添加新章节
+   191|          </button>
+   192|        </div>
+   193|      </div>
+   194|
+   195|      {/* 创作模式内容 */}
+   196|      {mode === 'new' ? (
+   197|        /* 新小说创作表单 */
+   198|        <form onSubmit={handleNewNovelSubmit} style={{
+   199|          backgroundColor: 'white',
+   200|          padding: '2rem',
+   201|          borderRadius: '12px',
+   202|          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+   203|        }}>
+   204|          <div style={{ marginBottom: '1.5rem' }}>
+   205|            <label style={{
+   206|              display: 'block',
+   207|              marginBottom: '0.5rem',
+   208|              fontWeight: '500',
+   209|              color: '#374151'
+   210|            }}>
+   211|              小说标题 *
+   212|            </label>
+   213|            <input
+   214|              type="text"
+   215|              value={novelData.title}
+   216|              onChange={(e) => setNovelData({ ...novelData, title: e.target.value })}
+   217|              placeholder="给你的故事起一个吸引人的标题"
+   218|              required
+   219|              style={{
+   220|                width: '100%',
+   221|                padding: '0.75rem',
+   222|                border: '1px solid #d1d5db',
+   223|                borderRadius: '8px',
+   224|                fontSize: '1rem'
+   225|              }}
+   226|            />
+   227|          </div>
+   228|
+   229|          <div style={{ marginBottom: '1.5rem' }}>
+   230|            <label style={{
+   231|              display: 'block',
+   232|              marginBottom: '0.5rem',
+   233|              fontWeight: '500',
+   234|              color: '#374151'
+   235|            }}>
+   236|              小说简介 *
+   237|            </label>
+   238|            <textarea
+   239|              value={novelData.description}
+   240|              onChange={(e) => setNovelData({ ...novelData, description: e.target.value })}
+   241|              placeholder="简单介绍一下你的故事，吸引读者阅读"
+   242|              rows={3}
+   243|              required
+   244|              style={{
+   245|                width: '100%',
+   246|                padding: '0.75rem',
+   247|                border: '1px solid #d1d5db',
+   248|                borderRadius: '8px',
+   249|                fontSize: '1rem',
+   250|                resize: 'vertical'
+   251|              }}
+   252|            />
+   253|          </div>
+   254|
+   255|          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+   256|            <div>
+   257|              <label style={{
+   258|                display: 'block',
+   259|                marginBottom: '0.5rem',
+   260|                fontWeight: '500',
+   261|                color: '#374151'
+   262|              }}>
+   263|                分类 *
+   264|              </label>
+   265|              <select
+   266|                value={novelData.category}
+   267|                onChange={(e) => setNovelData({ ...novelData, category: e.target.value })}
+   268|                style={{
+   269|                  width: '100%',
+   270|                  padding: '0.75rem',
+   271|                  border: '1px solid #d1d5db',
+   272|                  borderRadius: '8px',
+   273|                  fontSize: '1rem',
+   274|                  backgroundColor: 'white'
+   275|                }}
+   276|              >
+   277|                <option value="奇幻">奇幻</option>
+   278|                <option value="科幻">科幻</option>
+   279|                <option value="冒险">冒险</option>
+   280|                <option value="童话">童话</option>
+   281|                <option value="科普">科普</option>
+   282|                <option value="校园">校园</option>
+   283|                <option value="历史">历史</option>
+   284|                <option value="其他">其他</option>
+   285|              </select>
+   286|            </div>
+   287|
+   288|            <div>
+   289|              <label style={{
+   290|                display: 'block',
+   291|                marginBottom: '0.5rem',
+   292|                fontWeight: '500',
+   293|                color: '#374151'
+   294|              }}>
+   295|                标签
+   296|              </label>
+   297|              <input
+   298|                type="text"
+   299|                value={novelData.tags}
+   300|                onChange={(e) => setNovelData({ ...novelData, tags: e.target.value })}
+   301|                placeholder="用逗号分隔，如：魔法,冒险,友谊"
+   302|                style={{
+   303|                  width: '100%',
+   304|                  padding: '0.75rem',
+   305|                  border: '1px solid #d1d5db',
+   306|                  borderRadius: '8px',
+   307|                  fontSize: '1rem'
+   308|                }}
+   309|              />
+   310|            </div>
+   311|          </div>
+   312|
+   313|          <div style={{ marginBottom: '2rem' }}>
+   314|            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+   315|              <label style={{
+   316|                display: 'flex',
+   317|                alignItems: 'center',
+   318|                gap: '0.5rem',
+   319|                cursor: 'pointer'
+   320|              }}>
+   321|                <input
+   322|                  type="checkbox"
+   323|                  checked={novelData.isPublic}
+   324|                  onChange={(e) => setNovelData({ ...novelData, isPublic: e.target.checked })}
+   325|                  style={{ width: '1rem', height: '1rem' }}
+   326|                />
+   327|                <span style={{ fontWeight: '500', color: '#374151' }}>
+   328|                  公开可见
+   329|                </span>
+   330|              </label>
+   331|              
+   332|              <label style={{
+   333|                display: 'flex',
+   334|                alignItems: 'center',
+   335|                gap: '0.5rem',
+   336|                cursor: 'pointer'
+   337|              }}>
+   338|                <input
+   339|                  type="checkbox"
+   340|                  checked={novelData.allowComments}
+   341|                  onChange={(e) => setNovelData({ ...novelData, allowComments: e.target.checked })}
+   342|                  style={{ width: '1rem', height: '1rem' }}
+   343|                />
+   344|                <span style={{ fontWeight: '500', color: '#374151' }}>
+   345|                  允许评论
+   346|                </span>
+   347|              </label>
+   348|            </div>
+   349|          </div>
+   350|
+   351|          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+   352|            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+   353|              * 为必填项
+   354|            </div>
+   355|            
+   356|            <button
+   357|              type="submit"
+   358|              disabled={isLoading}
+   359|              style={{
+   360|                padding: '0.75rem 2rem',
+   361|                backgroundColor: isLoading ? '#9ca3af' : '#2563eb',
+   362|                color: 'white',
+   363|                border: 'none',
+   364|                borderRadius: '8px',
+   365|                fontSize: '1rem',
+   366|                fontWeight: '500',
+   367|                cursor: isLoading ? 'not-allowed' : 'pointer',
+   368|                display: 'flex',
+   369|                alignItems: 'center',
+   370|                gap: '0.5rem'
+   371|              }}
+   372|            >
+   373|              {isLoading ? (
+   374|                <>
+   375|                  <div style={{
+   376|                    width: '16px',
+   377|                    height: '16px',
+   378|                    border: '2px solid rgba(255,255,255,0.3)',
+   379|                    borderTopColor: 'white',
+   380|                    borderRadius: '50%',
+   381|                    animation: 'spin 1s linear infinite'
+   382|                  }} />
+   383|                  创建中...
+   384|                </>
+   385|              ) : (
+   386|                '创建小说'
+   387|              )}
+   388|            </button>
+   389|          </div>
+   390|        </form>
+   391|      ) : (
+   392|        /* 添加新章节表单 */
+   393|        <div>
+   394|          {/* 选择已有小说 */}
+   395|          <div style={{
+   396|            backgroundColor: 'white',
+   397|            padding: '1.5rem',
+   398|            borderRadius: '12px',
+   399|            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+   400|            marginBottom: '1.5rem'
+   401|          }}>
+   402|            <h3 style={{
+   403|              fontSize: '1.125rem',
+   404|              fontWeight: '600',
+   405|              marginBottom: '1rem',
+   406|              color: '#111827',
+   407|              display: 'flex',
+   408|              alignItems: 'center',
+   409|              gap: '0.5rem'
+   410|            }}>
+   411|              📚 选择小说
+   412|            </h3>
+   413|            
+   414|            {existingNovels.length > 0 ? (
+   415|              <div>
+   416|                <select
+   417|                  value={selectedNovelId}
+   418|                  onChange={(e) => setSelectedNovelId(e.target.value)}
+   419|                  style={{
+   420|                    width: '100%',
+   421|                    padding: '0.75rem',
+   422|                    border: '1px solid #d1d5db',
+   423|                    borderRadius: '8px',
+   424|                    fontSize: '1rem',
+   425|                    backgroundColor: 'white',
+   426|                    marginBottom: '1rem'
+   427|                  }}
+   428|                >
+   429|                  <option value="">请选择要添加章节的小说</option>
+   430|                  {existingNovels.map(novel => (
+   431|                    <option key={novel.id} value={novel.id}>
+   432|                      {novel.title} ({novel.chapters}章) - 最后更新: {novel.lastUpdated}
+   433|                    </option>
+   434|                  ))}
+   435|                </select>
+   436|                
+   437|                {selectedNovelId && (
+   438|                  <div style={{
+   439|                    backgroundColor: '#f0f9ff',
+   440|                    padding: '1rem',
+   441|                    borderRadius: '8px',
+   442|                    fontSize: '0.875rem',
+   443|                    color: '#1e40af'
+   444|                  }}>
+   445|                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>
+   446|                      已选择: {existingNovels.find(n => n.id === selectedNovelId)?.title}
+   447|                    </div>
+   448|                    <div>
+   449|                      当前章节数: {existingNovels.find(n => n.id === selectedNovelId)?.chapters} 章
+   450|                    </div>
+   451|                  </div>
+   452|                )}
+   453|              </div>
+   454|            ) : (
+   455|              <div style={{ textAlign: 'center', padding: '2rem' }}>
+   456|                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+   457|                <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+   458|                  你还没有创建任何小说
+   459|                </p>
+   460|                <button
+   461|                  onClick={() => setMode('new')}
+   462|                  style={{
+   463|                    padding: '0.5rem 1rem',
+   464|                    backgroundColor: '#2563eb',
+   465|                    color: 'white',
+   466|                    border: 'none',
+   467|                    borderRadius: '6px',
+   468|                    fontSize: '0.875rem',
+   469|                    fontWeight: '500',
+   470|                    cursor: 'pointer'
+   471|                  }}
+   472|                >
+   473|                  先去创作第一部小说
+   474|                </button>
+   475|              </div>
+   476|            )}
+   477|          </div>
+   478|
+   479|          {/* 章节表单 */}
+   480|          {selectedNovelId && (
+   481|            <form onSubmit={handleNewChapterSubmit} style={{
+   482|              backgroundColor: 'white',
+   483|              padding: '2rem',
+   484|              borderRadius: '12px',
+   485|              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+   486|            }}>
+   487|              <div style={{ marginBottom: '1.5rem' }}>
+   488|                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+   489|                  <div>
+   490|                    <label style={{
+   491|                      display: 'block',
+   492|                      marginBottom: '0.5rem',
+   493|                      fontWeight: '500',
+   494|                      color: '#374151'
+   495|                    }}>
+   496|                      章节编号 *
+   497|                    </label>
+   498|                    <input
+   499|                      type="number"
+   500|                      min="1"
+   501|
+                  }}
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

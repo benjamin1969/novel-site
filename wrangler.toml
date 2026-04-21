@@ -1,0 +1,13 @@
+name = "novel-platform-api"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+kv_namespaces = [
+  { binding = "NOVELS", id = "9349f71d4cbc49909a5d2da8b8e2cc7d" }
+]
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+vars = { ENVIRONMENT = "staging" }

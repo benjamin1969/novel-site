@@ -1,0 +1,12 @@
+name = "novel-platform"
+compatibility_date = "2026-04-20"
+pages_build_output_dir = "."
+
+[build]
+command = "echo 'Static site'"
+output_directory = "."
+
+[[routes]]
+pattern = "/*"
+zone_name = "ccwu.cc"
+custom_domain = true

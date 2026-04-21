@@ -1,0 +1,30 @@
+name = "novel-platform-optimized"
+type = "javascript"
+compatibility_date = "2024-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# KV命名空间配置（需要先在Cloudflare创建）
+kv_namespaces = [
+  { binding = "KV_STORE", id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", preview_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy" }
+]
+
+[build]
+command = "npm run build"
+publish = ".next/standalone"
+
+[[build.upload.rules]]
+type = "include"
+globs = ["**/*"]
+
+[[build.upload.rules]]
+type = "exclude"
+globs = ["node_modules", "node_modules/**", ".git", ".git/**"]
+
+[vars]
+NODE_ENV = "production"
+
+[env.staging]
+vars = { NODE_ENV = "staging" }
+
+[env.development]
+vars = { NODE_ENV = "development" }

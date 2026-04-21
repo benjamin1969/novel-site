@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  username    String    @unique
+  password    String
+  role        String    @default("USER") // USER, ADMIN
+  displayName String?
+  
+  // 禁言相关字段
+  isMuted     Boolean   @default(false)
+  mutedUntil  DateTime?
+  muteReason  String?
+  
+  // 时间戳
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // 关系
+  novels      Novel[]
+  comments    Comment[]
+  
+  @@index([username])
+  @@index([role])
+}
+
+model Novel {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @db.Text
+  coverImage  String?
+  
+  // 作者关系
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  
+  // 分类
+  category    String?   @default("冒险")
+  
+  // 状态
+  status      String    @default("PUBLISHED") // DRAFT, PUBLISHED
+  
+  // 统计
+  views       Int       @default(0)
+  likes       Int       @default(0)
+  chapterCount Int      @default(0)
+  
+  // 时间戳
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // 关系
+  chapters    Chapter[]
+  comments    Comment[]
+  
+  @@index([authorId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Chapter {
+  id            String   @id @default(cuid())
+  novelId       String
+  novel         Novel    @relation(fields: [novelId], references: [id])
+  title         String
+  chapterNumber Int
+  content       String   @db.Text
+  wordCount     Int      @default(0)
+  views         Int      @default(0)
+  
+  // 状态
+  status        String   @default("PUBLISHED") // DRAFT, PUBLISHED
+  
+  // 时间戳
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([novelId])
+  @@index([novelId, chapterNumber])
+  @@unique([novelId, chapterNumber])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  novelId   String
+  novel     Novel    @relation(fields: [novelId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String   @db.Text
+  
+  // 状态
+  status    String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  
+  // 统计
+  likes     Int      @default(0)
+  
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([novelId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+  
+  @@index([key])
+}

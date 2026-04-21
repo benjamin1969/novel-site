@@ -1,0 +1,7 @@
+{
+  "name": "novel-platform",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Static site deployed successfully' && exit 0"
+  }
+}
