@@ -1,0 +1,80 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env*.backup
+
+# vercel
+.vercel
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Backup files
+*.backup
+*backup*
+
+# Temporary directories
+cf-optimized/
+cf-pages-optimized/
+deploy-final/
+deploy-minimal/
+deploy-now/
+deploy-ultra-minimal/
+deploy/
+final-cf-deploy/
+final-deploy/
+optimized-version/
+static-site/
+api-deploy/
+data-fix/
+direct-test/
+emergency-fix/
+login-diagnostic/
+my-novels-real/
+novel-style-demo/
+simple-create/
+simple-login/
+test-chapter-fix/
+test-chapter/
+test-login/
+test-server/
+test-simple/
+test/
+zhangsan-test/
+fix-instructions/
+
+# Build artifacts
+.next/
+standalone/
+dist/
