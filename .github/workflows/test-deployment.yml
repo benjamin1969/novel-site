@@ -1,0 +1,44 @@
+name: Test Deployment
+
+on:
+  workflow_dispatch:  # 允许手动触发
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test website
+        run: |
+          echo "🔍 测试网站状态..."
+          echo "网站URL: https://novel-platform-f3a.pages.dev"
+          
+          # 测试网站
+          status=$(curl -s -o /dev/null -w "%{http_code}" "https://novel-platform-f3a.pages.dev/")
+          echo "网站状态码: $status"
+          
+          if [ "$status" = "200" ]; then
+            echo "✅ 网站正常"
+          else
+            echo "⚠️  网站异常"
+          fi
+      
+      - name: Test API
+        run: |
+          echo "🔍 测试API状态..."
+          echo "API URL: https://novel-platform-api.sunlongyun1030.workers.dev"
+          
+          # 测试API
+          status=$(curl -s -o /dev/null -w "%{http_code}" "https://novel-platform-api.sunlongyun1030.workers.dev/")
+          echo "API状态码: $status"
+          
+          if [ "$status" = "200" ]; then
+            echo "✅ API正常"
+          else
+            echo "⚠️  API异常"
+          fi
