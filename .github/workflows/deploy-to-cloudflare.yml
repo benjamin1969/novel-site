@@ -45,11 +45,11 @@ jobs:
       - name: Verify build output
         run: |
           echo "✅ 构建完成，检查输出目录..."
-          if [ -d ".next/standalone" ]; then
-            echo "📁 找到standalone目录"
-            ls -la .next/standalone/
+          if [ -d "out" ]; then
+            echo "📁 找到静态导出目录(out)"
+            ls -la out/
           else
-            echo "📁 使用默认构建输出"
+            echo "❌ 未找到out目录，检查构建配置"
             ls -la .next/
           fi
       
@@ -60,7 +60,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: novel-platform
-          directory: .next/standalone  # 使用Next.js standalone输出
+          directory: out  # 使用Next.js静态导出输出
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
           workingDirectory: '.'
