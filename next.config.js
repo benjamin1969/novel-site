@@ -3,6 +3,9 @@ const nextConfig = {
   // 使用默认配置，Cloudflare Pages支持完整的Next.js功能
   reactStrictMode: true,
   
+  // 添加尾部斜杠，可能有助于Cloudflare Pages路由
+  trailingSlash: true,
+  
   // 配置图片优化
   images: {
     unoptimized: true, // Cloudflare Pages不支持Next.js图片优化
